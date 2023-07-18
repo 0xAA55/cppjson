@@ -169,6 +169,9 @@ namespace JsonLibrary
 
 	std::unique_ptr<JsonData> ParseJsonFromString(const std::string& s);
 	std::unique_ptr<JsonData> ParseJsonFromFile(const std::string& FilePath);
+
+	std::unique_ptr<JsonData> DuplicateJsonDataUnique(const JsonData& jd);
+	std::shared_ptr<JsonData> DuplicateJsonDataShared(const JsonData& jd);
 }
 
 

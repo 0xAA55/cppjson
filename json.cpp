@@ -790,27 +790,27 @@ namespace JsonLibrary
 
 	JsonNumber::JsonNumber(std::int32_t Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
-		Value(Value)
+		Value(static_cast<double>(Value))
 	{
 	}
 	JsonNumber::JsonNumber(std::int64_t Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
-		Value(Value)
+		Value(static_cast<double>(Value))
 	{
 	}
 	JsonNumber::JsonNumber(std::uint32_t Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
-		Value(Value)
+		Value(static_cast<double>(Value))
 	{
 	}
 	JsonNumber::JsonNumber(std::uint64_t Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
-		Value(Value)
+		Value(static_cast<double>(Value))
 	{
 	}
 	JsonNumber::JsonNumber(float Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
-		Value(Value)
+		Value(static_cast<double>(Value))
 	{
 	}
 	JsonNumber::JsonNumber(double Value, size_t FromLineNo, size_t FromColumn) :
@@ -980,6 +980,48 @@ namespace JsonLibrary
 		}
 		ss << ifs.rdbuf();
 		return JsonData::ParseJson(ss.str());
+	}
+
+	std::unique_ptr<JsonData> DuplicateJsonDataUnique(const JsonData& jd)
+	{
+		switch (jd.GetType())
+		{
+		case JsonDataType::Object:
+			return std::make_unique<JsonObject>(jd.AsJsonObject());
+		case JsonDataType::Array:
+			return std::make_unique<JsonArray>(jd.AsJsonArray());
+		case JsonDataType::String:
+			return std::make_unique<JsonString>(jd.AsJsonString());
+		case JsonDataType::Number:
+			return std::make_unique<JsonNumber>(jd.AsJsonNumber());
+		case JsonDataType::Boolean:
+			return std::make_unique<JsonBoolean>(jd.AsJsonBoolean());
+		case JsonDataType::Null:
+			return std::make_unique<JsonNull>(jd.GetLineNo(), jd.GetColumn());
+		default:
+			throw WrongDataType("Unknown JSON data type.");
+		}
+	}
+
+	std::shared_ptr<JsonData> DuplicateJsonDataShared(const JsonData& jd)
+	{
+		switch (jd.GetType())
+		{
+		case JsonDataType::Object:
+			return std::make_shared<JsonObject>(jd.AsJsonObject());
+		case JsonDataType::Array:
+			return std::make_shared<JsonArray>(jd.AsJsonArray());
+		case JsonDataType::String:
+			return std::make_shared<JsonString>(jd.AsJsonString());
+		case JsonDataType::Number:
+			return std::make_shared<JsonNumber>(jd.AsJsonNumber());
+		case JsonDataType::Boolean:
+			return std::make_shared<JsonBoolean>(jd.AsJsonBoolean());
+		case JsonDataType::Null:
+			return std::make_shared<JsonNull>(jd.GetLineNo(), jd.GetColumn());
+		default:
+			throw WrongDataType("Unknown JSON data type.");
+		}
 	}
 }
 
