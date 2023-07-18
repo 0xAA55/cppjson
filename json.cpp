@@ -7,9 +7,9 @@
 
 namespace JsonLibrary
 {
-	JsonDecodeError::JsonDecodeError(size_t LineNo, size_t Column, const std::string& what) noexcept :
-		LineNo(LineNo),
-		Column(Column),
+	JsonDecodeError::JsonDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept :
+		LineNo(FromLineNo),
+		Column(FromColumn),
 		std::runtime_error(what)
 	{
 	}
@@ -376,6 +376,16 @@ namespace JsonLibrary
 			return ss.str();
 		}
 
+		JsonString ParseJsonString(size_t FromLineNo, size_t FromColumn)
+		{
+			return JsonString(ParseString(), FromLineNo, FromColumn);
+		}
+
+		std::unique_ptr<JsonString> ParseJsonStringUniquePtr(size_t FromLineNo, size_t FromColumn)
+		{
+			return std::make_unique<JsonString>(ParseString(), FromLineNo, FromColumn);
+		}
+
 		bool SkipDigits()
 		{
 			std::string::const_iterator n;
@@ -429,6 +439,16 @@ namespace JsonLibrary
 			return std::stod(ss.str());
 		}
 
+		JsonNumber ParseJsonNumber(char FirstChar, size_t FromLineNo, size_t FromColumn)
+		{
+			return JsonNumber(ParseNumber(FirstChar), FromLineNo, FromColumn);
+		}
+
+		std::unique_ptr<JsonNumber> ParseJsonNumberUniquePtr(char FirstChar, size_t FromLineNo, size_t FromColumn)
+		{
+			return std::make_unique<JsonNumber>(ParseNumber(FirstChar), FromLineNo, FromColumn);
+		}
+
 		void ParseTrue()
 		{
 			JsonDecodeError ex = JsonDecodeError(LineNo, Column, "Error when decoding true");
@@ -458,8 +478,10 @@ namespace JsonLibrary
 		}
 	};
 
-	JsonData::JsonData(JsonDataType Type) :
-		Type(Type)
+	JsonData::JsonData(JsonDataType Type, size_t FromLineNo, size_t FromColumn) :
+		Type(Type),
+		LineNo(FromLineNo),
+		Column(FromColumn)
 	{
 	}
 
@@ -478,6 +500,8 @@ namespace JsonLibrary
 		jp.SkipSpacesAndComments();
 		if (jp.End()) return nullptr;
 
+		size_t CurLineNo = jp.GetLineNo();
+		size_t CurColumn = jp.GetColumn();
 		int cur = jp.GetChar();
 		switch (cur)
 		{
@@ -485,7 +509,7 @@ namespace JsonLibrary
 			if(1)
 			{
 				jp.SkipSpacesAndComments();
-				auto ret = std::make_unique<JsonObject>();
+				auto ret = std::make_unique<JsonObject>(CurLineNo, CurColumn);
 				if (jp.PeekChar() == '}')
 				{
 					jp.GetChar();
@@ -495,7 +519,7 @@ namespace JsonLibrary
 				{
 					jp.SkipSpacesAndComments();
 					if (jp.GetChar() != '"') throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), "Key name must be string");
-					auto Key = jp.ParseString();
+					auto Key = jp.ParseJsonString(jp.GetLineNo(), jp.GetColumn());
 					jp.SkipSpacesAndComments();
 					if (jp.GetChar() != ':') throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), "No ':' found");
 					jp.SkipSpacesAndComments();
@@ -514,7 +538,7 @@ namespace JsonLibrary
 			if (1)
 			{
 				jp.SkipSpacesAndComments();
-				auto ret = std::make_unique<JsonArray>();
+				auto ret = std::make_unique<JsonArray>(CurLineNo, CurColumn);
 				if (jp.PeekChar() == ']')
 				{
 					jp.GetChar();
@@ -535,24 +559,24 @@ namespace JsonLibrary
 				return ret;
 			}
 		case '"':
-			return std::make_unique<JsonString>(jp.ParseString());
+			return jp.ParseJsonStringUniquePtr(CurLineNo, CurColumn);
 		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '-':
-			return std::make_unique<JsonNumber>(jp.ParseNumber(cur));
+			return jp.ParseJsonNumberUniquePtr(cur, CurLineNo, CurColumn);
 		case 't':
 			jp.ParseTrue();
-			return std::make_unique<JsonBoolean>(true);
+			return std::make_unique<JsonBoolean>(true, CurLineNo, CurColumn);
 		case 'f':
 			jp.ParseFalse();
-			return std::make_unique<JsonBoolean>(false);
+			return std::make_unique<JsonBoolean>(false, CurLineNo, CurColumn);
 		case 'n':
 			jp.ParseNull();
-			return std::make_unique<JsonNull>();
+			return std::make_unique<JsonNull>(CurLineNo, CurColumn);
 			break;
 		}
 
 		std::stringstream ss;
 		ss << "Unexpected '" << jp.EncodeUnicode(cur) << "'";
-		throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), ss.str());
+		throw JsonDecodeError(CurLineNo, CurColumn, ss.str());
 		return nullptr;
 	}
 
@@ -614,13 +638,13 @@ namespace JsonLibrary
 		return ss.str();
 	}
 
-	JsonObject::JsonObject() :
-		JsonData(JsonDataType::Object)
+	JsonObject::JsonObject(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Object, FromLineNo, FromColumn)
 	{
 	}
 
 	JsonObject::JsonObject(const JsonObject& c) :
-		JsonData(JsonDataType::Object)
+		JsonData(JsonDataType::Object, c.LineNo, c.Column)
 	{
 		for (auto &i : c)
 		{
@@ -676,13 +700,13 @@ namespace JsonLibrary
 		return ss.str();
 	}
 
-	JsonArray::JsonArray() :
-		JsonData(JsonDataType::Array)
+	JsonArray::JsonArray(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Array, FromLineNo, FromColumn)
 	{
 	}
 
 	JsonArray::JsonArray(const JsonArray& c) :
-		JsonData(JsonDataType::Array)
+		JsonData(JsonDataType::Array, c.LineNo, c.Column)
 	{
 		for (auto& i : c)
 		{
@@ -734,19 +758,19 @@ namespace JsonLibrary
 		return ss.str();
 	}
 
-	JsonString::JsonString() :
-		JsonData(JsonDataType::String)
+	JsonString::JsonString(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::String, FromLineNo, FromColumn)
 	{
 	}
 
-	JsonString::JsonString(const std::string& Value) :
-		JsonData(JsonDataType::String),
+	JsonString::JsonString(const std::string& Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::String, FromLineNo, FromColumn),
 		std::string(Value)
 	{
 	}
 
 	JsonString::JsonString(const JsonString& c) :
-		JsonData(JsonDataType::String),
+		JsonData(JsonDataType::String, c.LineNo, c.Column),
 		std::string(c)
 	{
 	}
@@ -758,20 +782,20 @@ namespace JsonLibrary
 		return ss.str();
 	}
 
-	JsonNumber::JsonNumber() :
-		JsonData(JsonDataType::Number),
+	JsonNumber::JsonNumber(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
 		Value(0)
 	{
 	}
 
-	JsonNumber::JsonNumber(double Value) :
-		JsonData(JsonDataType::Number),
+	JsonNumber::JsonNumber(double Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
 		Value(Value)
 	{
 	}
 
 	JsonNumber::JsonNumber(const JsonNumber& c) :
-		JsonData(JsonDataType::Number),
+		JsonData(JsonDataType::Number, c.LineNo, c.Column),
 		Value(c)
 	{
 	}
@@ -786,20 +810,20 @@ namespace JsonLibrary
 		return ss.str();
 	}
 
-	JsonBoolean::JsonBoolean() :
-		JsonData(JsonDataType::Boolean),
+	JsonBoolean::JsonBoolean(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Boolean, FromLineNo, FromColumn),
 		Value(0)
 	{
 	}
 
-	JsonBoolean::JsonBoolean(bool Value) :
-		JsonData(JsonDataType::Boolean),
+	JsonBoolean::JsonBoolean(bool Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Boolean, FromLineNo, FromColumn),
 		Value(Value)
 	{
 	}
 
 	JsonBoolean::JsonBoolean(const JsonBoolean& c) :
-		JsonData(JsonDataType::Boolean),
+		JsonData(JsonDataType::Boolean, c.LineNo, c.Column),
 		Value(c)
 	{
 	}
@@ -810,19 +834,29 @@ namespace JsonLibrary
 		else return "false";
 	}
 
-	JsonNull::JsonNull() :
-		JsonData(JsonDataType::Null)
+	JsonNull::JsonNull(size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Null, FromLineNo, FromColumn)
 	{
 	}
 
 	JsonNull::JsonNull(const JsonNull& c) :
-		JsonData(JsonDataType::Null)
+		JsonData(JsonDataType::Null, c.LineNo, c.Column)
 	{
 	}
 
 	std::string JsonNull::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
 		return "null";
+	}
+
+	size_t JsonData::GetLineNo() const
+	{
+		return LineNo;
+	}
+
+	size_t JsonData::GetColumn() const
+	{
+		return Column;
 	}
 
 	JsonObject& JsonData::AsJsonObject()

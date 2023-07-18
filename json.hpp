@@ -15,7 +15,7 @@ namespace JsonLibrary
 		size_t Column;
 
 	public:
-		JsonDecodeError(size_t LineNo, size_t Column, const std::string& what) noexcept;
+		JsonDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept;
 	};
 
 	class UnicodeEncodeError : public std::runtime_error
@@ -58,7 +58,10 @@ namespace JsonLibrary
 	{
 	protected:
 		JsonDataType Type;
-		JsonData(JsonDataType Type);
+		size_t LineNo;
+		size_t Column;
+
+		JsonData(JsonDataType Type, size_t FromLineNo = 0, size_t FromColumn = 0);
 
 		static void AddIndent(std::stringstream& ss, int indent, const std::string& indent_type);
 		static std::unique_ptr<JsonData> ParseJson(JsonParser& jp);
@@ -71,6 +74,9 @@ namespace JsonLibrary
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const = 0;
 
 		static std::unique_ptr<JsonData> ParseJson(const std::string& s);
+
+		size_t GetLineNo() const;
+		size_t GetColumn() const;
 
 		JsonObject& AsJsonObject();
 		JsonArray& AsJsonArray();
@@ -87,13 +93,13 @@ namespace JsonLibrary
 		bool IsNull() const;
 	};
 
-	using JsonObjectParentType = std::map<std::string, std::unique_ptr<JsonData>>;
+	using JsonObjectParentType = std::map<JsonString, std::unique_ptr<JsonData>>;
 	using JsonArrayParentType = std::vector<std::unique_ptr<JsonData>>;
 
 	class JsonObject : public JsonData, public JsonObjectParentType
 	{
 	public:
-		JsonObject();
+		JsonObject(size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonObject(const JsonObject& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
@@ -102,7 +108,7 @@ namespace JsonLibrary
 	class JsonArray : public JsonData, public JsonArrayParentType
 	{
 	public:
-		JsonArray();
+		JsonArray(size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonArray(const JsonArray& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
@@ -111,8 +117,8 @@ namespace JsonLibrary
 	class JsonString : public JsonData, public std::string
 	{
 	public:
-		JsonString();
-		JsonString(const std::string& Value);
+		JsonString(size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonString(const std::string& Value, size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonString(const JsonString& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
@@ -123,8 +129,8 @@ namespace JsonLibrary
 	public:
 		double Value;
 
-		JsonNumber();
-		JsonNumber(double Value);
+		JsonNumber(size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(double Value, size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonNumber(const JsonNumber& c);
 
 		operator double() const { return Value; }
@@ -136,8 +142,8 @@ namespace JsonLibrary
 	public:
 		bool Value;
 
-		JsonBoolean();
-		JsonBoolean(bool Value);
+		JsonBoolean(size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonBoolean(bool Value, size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonBoolean(const JsonBoolean& c);
 
 		operator bool() const { return Value; }
@@ -147,7 +153,7 @@ namespace JsonLibrary
 	class JsonNull : public JsonData
 	{
 	public:
-		JsonNull();
+		JsonNull(size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonNull(const JsonNull& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
