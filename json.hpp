@@ -5,9 +5,12 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <cstdint>
 
 namespace JsonLibrary
 {
+	using size_t = std::size_t;
+
 	class JsonDecodeError : public std::runtime_error
 	{
 	protected:
