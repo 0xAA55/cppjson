@@ -133,6 +133,11 @@ namespace JsonLibrary
 		double Value;
 
 		JsonNumber(size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(std::int32_t Value, size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(std::int64_t Value, size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(std::uint32_t Value, size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(std::uint64_t Value, size_t FromLineNo = 0, size_t FromColumn = 0);
+		JsonNumber(float Value, size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonNumber(double Value, size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonNumber(const JsonNumber& c);
 

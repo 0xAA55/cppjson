@@ -788,6 +788,31 @@ namespace JsonLibrary
 	{
 	}
 
+	JsonNumber::JsonNumber(std::int32_t Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
+		Value(Value)
+	{
+	}
+	JsonNumber::JsonNumber(std::int64_t Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
+		Value(Value)
+	{
+	}
+	JsonNumber::JsonNumber(std::uint32_t Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
+		Value(Value)
+	{
+	}
+	JsonNumber::JsonNumber(std::uint64_t Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
+		Value(Value)
+	{
+	}
+	JsonNumber::JsonNumber(float Value, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
+		Value(Value)
+	{
+	}
 	JsonNumber::JsonNumber(double Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
 		Value(Value)
