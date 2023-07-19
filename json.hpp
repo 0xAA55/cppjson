@@ -18,6 +18,8 @@ namespace JsonLibrary
 		size_t Column;
 
 	public:
+		size_t GetLineNo() const;
+		size_t GetColumn() const;
 		JsonDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept;
 	};
 
@@ -29,14 +31,26 @@ namespace JsonLibrary
 
 	class UnicodeDecodeError : public std::runtime_error
 	{
+	protected:
+		size_t LineNo;
+		size_t Column;
+
 	public:
-		UnicodeDecodeError(const std::string& what) noexcept;
+		size_t GetLineNo() const;
+		size_t GetColumn() const;
+		UnicodeDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept;
 	};
 
 	class WrongDataType : public std::invalid_argument
 	{
+	protected:
+		size_t LineNo;
+		size_t Column;
+
 	public:
-		WrongDataType(const std::string& what) noexcept;
+		size_t GetLineNo() const;
+		size_t GetColumn() const;
+		WrongDataType(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept;
 	};
 
 	enum class JsonDataType

@@ -14,19 +14,50 @@ namespace JsonLibrary
 	{
 	}
 
+	size_t JsonDecodeError::GetLineNo() const
+	{
+		return LineNo;
+	}
+	size_t JsonDecodeError::GetColumn() const
+	{
+		return Column;
+	}
+
 	UnicodeEncodeError::UnicodeEncodeError(const std::string& what) noexcept :
 		std::runtime_error(what)
 	{
 	}
 
-	UnicodeDecodeError::UnicodeDecodeError(const std::string& what) noexcept :
+	UnicodeDecodeError::UnicodeDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept :
+		LineNo(FromLineNo),
+		Column(FromColumn),
 		std::runtime_error(what)
 	{
 	}
 
-	WrongDataType::WrongDataType(const std::string& what) noexcept :
+	size_t UnicodeDecodeError::GetLineNo() const
+	{
+		return LineNo;
+	}
+	size_t UnicodeDecodeError::GetColumn() const
+	{
+		return Column;
+	}
+
+	WrongDataType::WrongDataType(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept :
+		LineNo(FromLineNo),
+		Column(FromColumn),
 		std::invalid_argument(what)
 	{
+	}
+
+	size_t WrongDataType::GetLineNo() const
+	{
+		return LineNo;
+	}
+	size_t WrongDataType::GetColumn() const
+	{
+		return Column;
 	}
 
 	template<typename NumType, int N>
@@ -85,7 +116,7 @@ namespace JsonLibrary
 		{
 		}
 
-		static size_t GetUtf8CharLen(uint8_t FirstByte)
+		size_t GetUtf8CharLen(uint8_t FirstByte)
 		{
 			if ((FirstByte & 0xFE) == 0xFC)//1111110x
 			{
@@ -111,7 +142,7 @@ namespace JsonLibrary
 			{
 				std::stringstream ss;
 				ss << "can't decode byte 0x" << std::hex << static_cast<uint32_t>(FirstByte) << ": invalid start byte";
-				throw UnicodeDecodeError(ss.str());
+				throw UnicodeDecodeError(LineNo, Column, ss.str());
 			}
 			else if ((FirstByte & 0x80) == 0x00)//0xxxxxxx
 			{
@@ -121,7 +152,7 @@ namespace JsonLibrary
 			{
 				std::stringstream ss;
 				ss << "can't decode byte 0x" << std::hex << static_cast<uint32_t>(FirstByte) << ": invalid start byte";
-				throw UnicodeDecodeError(ss.str());
+				throw UnicodeDecodeError(LineNo, Column, ss.str());
 			}
 		}
 
@@ -233,7 +264,7 @@ namespace JsonLibrary
 			{
 				std::stringstream ss;
 				ss << "can't decode byte 0x" << Hex2(cur[0]) << ": invalid start byte";
-				throw UnicodeDecodeError(ss.str());
+				throw UnicodeDecodeError(LineNo, Column, ss.str());
 			}
 			else if ((cur[0] & 0x80) == 0x00)//0xxxxxxx
 			{
@@ -244,7 +275,7 @@ namespace JsonLibrary
 			{
 				std::stringstream ss;
 				ss << "can't decode byte " << Hex2(cur[0]) << ": invalid byte";
-				throw UnicodeDecodeError(ss.str());
+				throw UnicodeDecodeError(LineNo, Column, ss.str());
 			}
 
 			if (next) *next = cur + bytes;
@@ -671,7 +702,7 @@ namespace JsonLibrary
 				insert({ key, std::make_unique<JsonNull>() });
 				break;
 			default:
-				throw WrongDataType("Unknown JSON data type.");
+				throw WrongDataType(c.LineNo, c.Column, "Unknown JSON data type.");
 			}
 		}
 	}
@@ -731,7 +762,7 @@ namespace JsonLibrary
 				push_back(std::make_unique<JsonNull>());
 				break;
 			default:
-				throw WrongDataType("Unknown JSON data type.");
+				throw WrongDataType(c.LineNo, c.Column, "Unknown JSON data type.");
 			}
 		}
 	}
@@ -887,61 +918,61 @@ namespace JsonLibrary
 	JsonObject& JsonData::AsJsonObject()
 	{
 		auto p = dynamic_cast<JsonObject*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON object.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
 
 	JsonArray& JsonData::AsJsonArray()
 	{
 		auto p = dynamic_cast<JsonArray*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON array.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON array.");
 	}
 
 	JsonString& JsonData::AsJsonString()
 	{
 		auto p = dynamic_cast<JsonString*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON string.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON string.");
 	}
 
 	JsonNumber& JsonData::AsJsonNumber()
 	{
 		auto p = dynamic_cast<JsonNumber*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON number.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON number.");
 	}
 
 	JsonBoolean& JsonData::AsJsonBoolean()
 	{
 		auto p = dynamic_cast<JsonBoolean*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON boolean.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON boolean.");
 	}
 
 	const JsonObject& JsonData::AsJsonObject() const
 	{
 		auto p = dynamic_cast<const JsonObject*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON object.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
 
 	const JsonArray& JsonData::AsJsonArray() const
 	{
 		auto p = dynamic_cast<const JsonArray*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON array.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON array.");
 	}
 
 	const JsonString& JsonData::AsJsonString() const
 	{
 		auto p = dynamic_cast<const JsonString*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON string.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON string.");
 	}
 
 	const JsonNumber& JsonData::AsJsonNumber() const
 	{
 		auto p = dynamic_cast<const JsonNumber*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON number.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON number.");
 	}
 
 	const JsonBoolean& JsonData::AsJsonBoolean() const
 	{
 		auto p = dynamic_cast<const JsonBoolean*>(this);
-		if (p) return *p; else throw WrongDataType("Not a JSON boolean.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON boolean.");
 	}
 
 	bool JsonData::IsNull() const
@@ -999,7 +1030,7 @@ namespace JsonLibrary
 		case JsonDataType::Null:
 			return std::make_unique<JsonNull>(jd.GetLineNo(), jd.GetColumn());
 		default:
-			throw WrongDataType("Unknown JSON data type.");
+			throw WrongDataType(jd.GetLineNo(), jd.GetColumn(), "Unknown JSON data type.");
 		}
 	}
 
@@ -1020,7 +1051,7 @@ namespace JsonLibrary
 		case JsonDataType::Null:
 			return std::make_shared<JsonNull>(jd.GetLineNo(), jd.GetColumn());
 		default:
-			throw WrongDataType("Unknown JSON data type.");
+			throw WrongDataType(jd.GetLineNo(), jd.GetColumn(), "Unknown JSON data type.");
 		}
 	}
 }
