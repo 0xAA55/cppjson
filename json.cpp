@@ -282,15 +282,20 @@ namespace JsonLibrary
 			return static_cast<int>(ret);
 		}
 
-		int GetChar()
+		void UpdateLineNoColumn(int cur_char)
 		{
-			int ch = PeekChar(&it);
-			if (ch == '\n')
+			if (cur_char == '\n')
 			{
 				LineNo += 1;
 				Column = 0;
 			}
 			Column += 1;
+		}
+
+		int GetChar()
+		{
+			int ch = PeekChar(&it);
+			UpdateLineNoColumn(ch);
 			return ch;
 		}
 
@@ -311,10 +316,16 @@ namespace JsonLibrary
 		{
 			std::string::const_iterator n;
 			if (End()) return;
-			while (isspace(PeekChar(&n)))
+			for (;;)
 			{
-				it = n;
-				if (End()) break;
+				int ch = PeekChar(&n);
+				if (isspace(ch))
+				{
+					UpdateLineNoColumn(ch);
+					it = n;
+					if (End()) break;
+				}
+				else break;
 			}
 		}
 
@@ -332,7 +343,9 @@ namespace JsonLibrary
 			{
 				SkipSpaces();
 				if (End()) return;
-				if (PeekChar(&n) != '/') return;
+				int ch = PeekChar(&n);
+				if (ch != '/') return;
+				UpdateLineNoColumn(ch);
 				it = n;
 				int next = GetChar();
 				switch (next)
@@ -345,8 +358,10 @@ namespace JsonLibrary
 					{
 						SkipUntilChar('*');
 						if (End()) throw JsonDecodeError(LineNo, Column, "Expected */");
-						if (PeekChar(&n) == '/')
+						ch = PeekChar(&n);
+						if (ch == '/')
 						{
+							UpdateLineNoColumn(ch);
 							it = n;
 							break;
 						}
@@ -423,9 +438,11 @@ namespace JsonLibrary
 			bool SkippedDigit = false;
 			for (;;)
 			{
-				if (isdigit(PeekChar(&n)))
+				int ch = PeekChar(&n);
+				if (isdigit(ch))
 				{
 					SkippedDigit = true;
+					UpdateLineNoColumn(ch);
 					it = n;
 				}
 				else
@@ -451,6 +468,7 @@ namespace JsonLibrary
 			int next = PeekChar(&n);
 			if (next == '.')
 			{
+				UpdateLineNoColumn(next);
 				it = n;
 				sd = SkipDigits();
 				if (!sd) throw JsonDecodeError(LineNo, Column, "Expected digit");
@@ -458,9 +476,14 @@ namespace JsonLibrary
 			}
 			if (next == 'e' || next == 'E')
 			{
+				UpdateLineNoColumn(next);
 				it = n;
 				next = PeekChar(&n);
-				if (next == '-') it = n;
+				if (next == '-')
+				{
+					UpdateLineNoColumn(next);
+					it = n;
+				}
 				sd = SkipDigits();
 				if (!sd) throw JsonDecodeError(LineNo, Column, "Expected digit");
 			}
