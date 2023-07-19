@@ -456,7 +456,7 @@ namespace JsonLibrary
 				if (!sd) throw JsonDecodeError(LineNo, Column, "Expected digit");
 				next = PeekChar(&n);
 			}
-			if (next == 'e')
+			if (next == 'e' || next == 'E')
 			{
 				it = n;
 				next = PeekChar(&n);
