@@ -738,8 +738,6 @@ namespace JsonLibrary
 	std::string JsonObject::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
 		std::stringstream ss;
-		if (indent) ss << std::endl;
-		AddIndent(ss, cur_indent, indent_type);
 		ss << "{";
 		if (indent) ss << std::endl;
 		cur_indent += indent;
@@ -798,8 +796,6 @@ namespace JsonLibrary
 	std::string JsonArray::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
 		std::stringstream ss;
-		if (indent) ss << std::endl;
-		AddIndent(ss, cur_indent, indent_type);
 		ss << "[";
 		if (indent) ss << std::endl;
 		cur_indent += indent;
