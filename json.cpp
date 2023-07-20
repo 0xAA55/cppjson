@@ -730,6 +730,11 @@ namespace JsonLibrary
 		}
 	}
 
+	std::unique_ptr<JsonData>& JsonObject::operator [] (const std::string& key)
+	{
+		return JsonObjectParentType::operator[](JsonString(key));
+	}
+
 	std::string JsonObject::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
 		std::stringstream ss;

@@ -119,6 +119,8 @@ namespace JsonLibrary
 		JsonObject(size_t FromLineNo = 0, size_t FromColumn = 0);
 		JsonObject(const JsonObject& c);
 
+		std::unique_ptr<JsonData>& operator [] (const std::string& key);
+
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
 	};
 
