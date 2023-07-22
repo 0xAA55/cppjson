@@ -544,6 +544,11 @@ namespace JsonLibrary
 		return Type;
 	}
 
+	bool JsonData::operator ==(const JsonData& c) const
+	{
+		return Type == c.Type;
+	}
+
 	void JsonData::AddIndent(std::stringstream& ss, int indent, const std::string& indent_type)
 	{
 		for (int i = 0; i < indent; i++) ss << indent_type;
@@ -1012,6 +1017,111 @@ namespace JsonLibrary
 		jp.SkipSpacesAndComments();
 		if (!jp.End()) throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), "Unexpected extra data");
 		return ret;
+	}
+
+	bool JsonData::operator ==(const JsonData& c) const
+	{
+		if (Type != c.Type) return false;
+		switch (c.GetType())
+		{
+		case JsonDataType::Object:
+			return AsJsonObject() == c.AsJsonObject();
+		case JsonDataType::Array:
+			return AsJsonArray() == c.AsJsonArray();
+		case JsonDataType::String:
+			return AsJsonString() == AsJsonString();
+		case JsonDataType::Number:
+			return AsJsonNumber() == AsJsonNumber();
+		case JsonDataType::Boolean:
+			return AsJsonBoolean() == AsJsonBoolean();
+		case JsonDataType::Null:
+			return true; // 都是 true
+		default:
+			throw WrongDataType(c.GetLineNo(), c.GetColumn(), "Unknown JSON data type.");
+			return false;
+		}
+	}
+
+	bool JsonData::operator !=(const JsonData& c) const
+	{
+		return ! operator==(c);
+	}
+
+	bool JsonObject::operator ==(const JsonObject& c) const
+	{
+		// 数量得一致
+		if (size() != c.size()) return false;
+
+		for (auto& kv : *this)
+		{
+			auto& key = kv.first;
+
+			// 每个 key 都得找得到
+			if (!c.contains(key)) return false;
+
+			// 每个 Item 得匹配
+			if (*kv.second != *c.at(key)) return false;
+		}
+
+		return true;
+	}
+
+	bool JsonObject::operator !=(const JsonObject& c) const
+	{
+		return !operator==(c);
+	}
+
+	bool JsonArray::operator ==(const JsonArray& c) const
+	{
+		if (size() != c.size()) return false;
+
+		for (size_t i = 0; i < size(); i++)
+		{
+			if (*at(i) != *c.at(i)) return false;
+		}
+
+		return true;
+	}
+
+	bool JsonArray::operator !=(const JsonArray& c) const
+	{
+		return !operator==(c);
+	}
+
+	bool JsonString::operator ==(const JsonString& c) const
+	{
+		return static_cast<const std::string&>(*this) == static_cast<const std::string&>(c);
+	}
+	bool JsonString::operator !=(const JsonString& c) const
+	{
+		return !operator==(c);
+	}
+
+	bool JsonNumber::operator ==(const JsonNumber& c) const
+	{
+		return Value == c.Value;
+	}
+	bool JsonNumber::operator !=(const JsonNumber& c) const
+	{
+		return !operator==(c);
+	}
+
+	bool JsonBoolean::operator ==(const JsonBoolean& c) const
+	{
+		return Value == c.Value;
+	}
+	bool JsonBoolean::operator !=(const JsonBoolean& c) const
+	{
+		return !operator==(c);
+	}
+
+	bool JsonNull::operator ==(const JsonNull& c) const
+	{
+		return true;
+	}
+	bool JsonNull::operator !=(const JsonNull& c) const
+	{
+		return !operator==(c);
 	}
 
 	std::unique_ptr<JsonData> ParseJson(const std::string& s)

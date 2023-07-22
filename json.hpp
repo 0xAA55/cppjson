@@ -108,6 +108,9 @@ namespace JsonLibrary
 		const JsonBoolean& AsJsonBoolean() const;
 
 		bool IsNull() const;
+
+		bool operator ==(const JsonData& c) const;
+		bool operator !=(const JsonData& c) const;
 	};
 
 	using JsonObjectParentType = std::map<JsonString, std::unique_ptr<JsonData>>;
@@ -122,6 +125,9 @@ namespace JsonLibrary
 		std::unique_ptr<JsonData>& operator [] (const std::string& key);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonObject& c) const;
+		bool operator !=(const JsonObject& c) const;
 	};
 
 	class JsonArray : public JsonData, public JsonArrayParentType
@@ -131,6 +137,9 @@ namespace JsonLibrary
 		JsonArray(const JsonArray& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonArray& c) const;
+		bool operator !=(const JsonArray& c) const;
 	};
 
 	class JsonString : public JsonData, public std::string
@@ -141,6 +150,9 @@ namespace JsonLibrary
 		JsonString(const JsonString& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonString& c) const;
+		bool operator !=(const JsonString& c) const;
 	};
 
 	class JsonNumber : public JsonData
@@ -159,6 +171,9 @@ namespace JsonLibrary
 
 		operator double() const { return Value; }
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonNumber& c) const;
+		bool operator !=(const JsonNumber& c) const;
 	};
 
 	class JsonBoolean : public JsonData
@@ -172,6 +187,9 @@ namespace JsonLibrary
 
 		operator bool() const { return Value; }
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonBoolean& c) const;
+		bool operator !=(const JsonBoolean& c) const;
 	};
 
 	class JsonNull : public JsonData
@@ -181,6 +199,9 @@ namespace JsonLibrary
 		JsonNull(const JsonNull& c);
 
 		virtual std::string ToString(int indent = 0, int cur_indent = 0, const std::string& indent_type = " ") const override;
+
+		bool operator ==(const JsonNull& c) const;
+		bool operator !=(const JsonNull& c) const;
 	};
 
 	std::unique_ptr<JsonData> ParseJsonFromString(const std::string& s);
