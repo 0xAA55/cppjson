@@ -544,11 +544,6 @@ namespace JsonLibrary
 		return Type;
 	}
 
-	bool JsonData::operator ==(const JsonData& c) const
-	{
-		return Type == c.Type;
-	}
-
 	void JsonData::AddIndent(std::stringstream& ss, int indent, const std::string& indent_type)
 	{
 		for (int i = 0; i < indent; i++) ss << indent_type;
@@ -887,12 +882,36 @@ namespace JsonLibrary
 
 	std::string JsonNumber::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
-		std::stringstream ss;
-		ss << Value;
-		auto str = ss.str();
-		ss = std::stringstream();
-		for(auto& ch: str) if (ch != '+') ss << ch;
-		return ss.str();
+		char buf[256];
+		char* chr = buf;
+		char* chw = buf;
+		char* pt = nullptr;
+		bool DecimalNonZero = false;
+
+		snprintf(buf, sizeof buf, "%lf", Value);
+		for (; *chr; chr ++)
+		{
+			// 去除加号
+			if (*chr != '+')
+			{
+				*chw = *chr;
+				if (!pt)
+				{
+					// 找到小数点
+					if (*chw == '.') pt = chw;
+				}
+				else
+				{
+					// 找到后看小数点后面是不是全都是零
+					if (*chw != '0') DecimalNonZero = true;
+				}
+				chw++;
+			}
+		}
+		// 小数点后面全都是零，从小数点这里截断字符串
+		if (pt && !DecimalNonZero) *pt = 0;
+		else *chw = 0;
+		return buf;
 	}
 
 	JsonBoolean::JsonBoolean(size_t FromLineNo, size_t FromColumn) :
