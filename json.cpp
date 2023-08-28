@@ -427,9 +427,9 @@ namespace JsonLibrary
 			return JsonString(ParseString(), FromLineNo, FromColumn);
 		}
 
-		std::unique_ptr<JsonString> ParseJsonStringUniquePtr(size_t FromLineNo, size_t FromColumn)
+		JsonStringPtr ParseJsonStringPtr(size_t FromLineNo, size_t FromColumn)
 		{
-			return std::make_unique<JsonString>(ParseString(), FromLineNo, FromColumn);
+			return MakeJsonStringPtr(ParseString(), FromLineNo, FromColumn);
 		}
 
 		bool SkipDigits()
@@ -498,9 +498,9 @@ namespace JsonLibrary
 			return JsonNumber(ParseNumber(FirstChar), FromLineNo, FromColumn);
 		}
 
-		std::unique_ptr<JsonNumber> ParseJsonNumberUniquePtr(char FirstChar, size_t FromLineNo, size_t FromColumn)
+		JsonNumberPtr ParseJsonNumberUniquePtr(char FirstChar, size_t FromLineNo, size_t FromColumn)
 		{
-			return std::make_unique<JsonNumber>(ParseNumber(FirstChar), FromLineNo, FromColumn);
+			return MakeJsonNumberPtr(ParseNumber(FirstChar), FromLineNo, FromColumn);
 		}
 
 		void ParseTrue()
@@ -549,7 +549,7 @@ namespace JsonLibrary
 		for (int i = 0; i < indent; i++) ss << indent_type;
 	}
 
-	std::unique_ptr<JsonData> JsonData::ParseJson(JsonParser& jp)
+	JsonDataPtr JsonData::ParseJson(JsonParser& jp)
 	{
 		jp.SkipSpacesAndComments();
 		if (jp.End()) return nullptr;
@@ -563,7 +563,7 @@ namespace JsonLibrary
 			if(1)
 			{
 				jp.SkipSpacesAndComments();
-				auto ret = std::make_unique<JsonObject>(CurLineNo, CurColumn);
+				auto ret = MakeJsonObjectPtr(CurLineNo, CurColumn);
 				if (jp.PeekChar() == '}')
 				{
 					jp.GetChar();
@@ -577,7 +577,7 @@ namespace JsonLibrary
 					jp.SkipSpacesAndComments();
 					if (jp.GetChar() != ':') throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), "No ':' found");
 					jp.SkipSpacesAndComments();
-					ret->insert({Key, ParseJson(jp)});
+					(*ret)[Key] = ParseJson(jp);
 					jp.SkipSpacesAndComments();
 					auto comma = jp.GetChar();
 					if (comma == '}') break;
@@ -592,7 +592,7 @@ namespace JsonLibrary
 			if (1)
 			{
 				jp.SkipSpacesAndComments();
-				auto ret = std::make_unique<JsonArray>(CurLineNo, CurColumn);
+				auto ret = MakeJsonArrayPtr(CurLineNo, CurColumn);
 				if (jp.PeekChar() == ']')
 				{
 					jp.GetChar();
@@ -613,18 +613,18 @@ namespace JsonLibrary
 				return ret;
 			}
 		case '"':
-			return jp.ParseJsonStringUniquePtr(CurLineNo, CurColumn);
+			return jp.ParseJsonStringPtr(CurLineNo, CurColumn);
 		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '-':
 			return jp.ParseJsonNumberUniquePtr(cur, CurLineNo, CurColumn);
 		case 't':
 			jp.ParseTrue();
-			return std::make_unique<JsonBoolean>(true, CurLineNo, CurColumn);
+			return MakeJsonBooleanPtr(true, CurLineNo, CurColumn);
 		case 'f':
 			jp.ParseFalse();
-			return std::make_unique<JsonBoolean>(false, CurLineNo, CurColumn);
+			return MakeJsonBooleanPtr(false, CurLineNo, CurColumn);
 		case 'n':
 			jp.ParseNull();
-			return std::make_unique<JsonNull>(CurLineNo, CurColumn);
+			return MakeJsonNullPtr(CurLineNo, CurColumn);
 			break;
 		}
 
@@ -697,42 +697,10 @@ namespace JsonLibrary
 	{
 	}
 
-	JsonObject::JsonObject(const JsonObject& c) :
-		JsonData(JsonDataType::Object, c.LineNo, c.Column)
+	JsonObject::JsonObject(const JsonObjectParentType& c, size_t FromLineNo, size_t FromColumn) :
+		JsonObjectParentType(c),
+		JsonData(JsonDataType::Object, FromLineNo, FromColumn)
 	{
-		for (auto &i : c)
-		{
-			auto& key = i.first;
-			auto& value = i.second;
-			switch (value->GetType())
-			{
-			case JsonDataType::Object:
-				insert({ key, std::make_unique<JsonObject>(value->AsJsonObject()) });
-				break;
-			case JsonDataType::Array:
-				insert({ key, std::make_unique<JsonArray>(value->AsJsonArray()) });
-				break;
-			case JsonDataType::String:
-				insert({ key, std::make_unique<JsonString>(value->AsJsonString()) });
-				break;
-			case JsonDataType::Number:
-				insert({ key, std::make_unique<JsonNumber>(value->AsJsonNumber()) });
-				break;
-			case JsonDataType::Boolean:
-				insert({ key, std::make_unique<JsonBoolean>(value->AsJsonBoolean()) });
-				break;
-			case JsonDataType::Null:
-				insert({ key, std::make_unique<JsonNull>() });
-				break;
-			default:
-				throw WrongDataType(c.LineNo, c.Column, "Unknown JSON data type.");
-			}
-		}
-	}
-
-	std::unique_ptr<JsonData>& JsonObject::operator [] (const std::string& key)
-	{
-		return JsonObjectParentType::operator[](JsonString(key));
 	}
 
 	std::string JsonObject::ToString(int indent, int cur_indent, const std::string& indent_type) const
@@ -762,35 +730,10 @@ namespace JsonLibrary
 	{
 	}
 
-	JsonArray::JsonArray(const JsonArray& c) :
-		JsonData(JsonDataType::Array, c.LineNo, c.Column)
+	JsonArray::JsonArray(const JsonArrayParentType& c, size_t FromLineNo, size_t FromColumn) :
+		JsonData(JsonDataType::Array, FromLineNo, FromColumn),
+		JsonArrayParentType(c)
 	{
-		for (auto& i : c)
-		{
-			switch (i->GetType())
-			{
-			case JsonDataType::Object:
-				push_back(std::make_unique<JsonObject>(i->AsJsonObject()));
-				break;
-			case JsonDataType::Array:
-				push_back(std::make_unique<JsonArray>(i->AsJsonArray()));
-				break;
-			case JsonDataType::String:
-				push_back(std::make_unique<JsonString>(i->AsJsonString()));
-				break;
-			case JsonDataType::Number:
-				push_back(std::make_unique<JsonNumber>(i->AsJsonNumber()));
-				break;
-			case JsonDataType::Boolean:
-				push_back(std::make_unique<JsonBoolean>(i->AsJsonBoolean()));
-				break;
-			case JsonDataType::Null:
-				push_back(std::make_unique<JsonNull>());
-				break;
-			default:
-				throw WrongDataType(c.LineNo, c.Column, "Unknown JSON data type.");
-			}
-		}
 	}
 
 	std::string JsonArray::ToString(int indent, int cur_indent, const std::string& indent_type) const
@@ -821,12 +764,6 @@ namespace JsonLibrary
 	JsonString::JsonString(const std::string& Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::String, FromLineNo, FromColumn),
 		std::string(Value)
-	{
-	}
-
-	JsonString::JsonString(const JsonString& c) :
-		JsonData(JsonDataType::String, c.LineNo, c.Column),
-		std::string(c)
 	{
 	}
 
@@ -871,12 +808,6 @@ namespace JsonLibrary
 	JsonNumber::JsonNumber(double Value, size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Number, FromLineNo, FromColumn),
 		Value(Value)
-	{
-	}
-
-	JsonNumber::JsonNumber(const JsonNumber& c) :
-		JsonData(JsonDataType::Number, c.LineNo, c.Column),
-		Value(c)
 	{
 	}
 
@@ -926,12 +857,6 @@ namespace JsonLibrary
 	{
 	}
 
-	JsonBoolean::JsonBoolean(const JsonBoolean& c) :
-		JsonData(JsonDataType::Boolean, c.LineNo, c.Column),
-		Value(c)
-	{
-	}
-
 	std::string JsonBoolean::ToString(int indent, int cur_indent, const std::string& indent_type) const
 	{
 		if (Value) return "true";
@@ -940,11 +865,6 @@ namespace JsonLibrary
 
 	JsonNull::JsonNull(size_t FromLineNo, size_t FromColumn) :
 		JsonData(JsonDataType::Null, FromLineNo, FromColumn)
-	{
-	}
-
-	JsonNull::JsonNull(const JsonNull& c) :
-		JsonData(JsonDataType::Null, c.LineNo, c.Column)
 	{
 	}
 
@@ -1029,7 +949,7 @@ namespace JsonLibrary
 		return p ? true : false;
 	}
 
-	std::unique_ptr<JsonData> JsonData::ParseJson(const std::string& s)
+	JsonDataPtr JsonData::ParseJson(const std::string& s)
 	{
 		JsonParser jp(s);
 		auto ret = ParseJson(jp);
@@ -1143,17 +1063,206 @@ namespace JsonLibrary
 		return !operator==(c);
 	}
 
-	std::unique_ptr<JsonData> ParseJson(const std::string& s)
+	JsonDataPtr& JsonData::operator [] (const std::string& key)
+	{
+		return operator [](JsonString(key, 0, 0));
+	}
+
+	const JsonDataPtr& JsonData::at(const std::string& key) const
+	{
+		return at(JsonString(key, 0, 0));
+	}
+
+	JsonData::operator JsonString () const
+	{
+		return JsonString(ToString(), LineNo, Column);
+	}
+
+	JsonDataPtr& JsonObject::operator [] (const std::string& key)
+	{
+		return JsonObjectParentType::operator[](JsonString(key, 0, 0));
+	}
+
+	const JsonDataPtr& JsonObject::at(const std::string& key) const
+	{
+		return JsonObjectParentType::at(JsonString(key, 0, 0));
+	}
+
+	JsonDataPtr& JsonObject::operator [] (const JsonString& Key)
+	{
+		return JsonObjectParentType::operator[](Key);
+	}
+
+	const JsonDataPtr& JsonObject::at(const JsonString& Key) const
+	{
+		return JsonObjectParentType::at(Key);
+	}
+
+	JsonDataPtr& JsonObject::operator [] (size_t Index)
+	{
+		char buf[128];
+		snprintf(buf, sizeof buf, "%zu", Index);
+		return operator [](buf);
+	}
+
+	const JsonDataPtr& JsonObject::at(size_t Index) const
+	{
+		char buf[128];
+		snprintf(buf, sizeof buf, "%zu", Index);
+		return at(buf);
+	}
+
+	JsonObject::operator double() const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+	}
+
+	JsonDataPtr& JsonArray::operator [] (const JsonString& Key)
+	{
+		return operator[](size_t(std::stoull(Key)));
+	}
+
+	JsonDataPtr& JsonArray::operator [] (const std::string& Key)
+	{
+		return operator[](size_t(std::stoull(Key)));
+	}
+
+	const JsonDataPtr& JsonArray::at(const std::string& Key) const
+	{
+		return at(size_t(std::stoull(Key)));
+	}
+
+	const JsonDataPtr& JsonArray::at(const JsonString& Key) const
+	{
+		return at(size_t(std::stoull(Key)));
+	}
+
+	JsonDataPtr& JsonArray::operator [] (size_t Index)
+	{
+		return JsonArrayParentType::operator[](Index);
+	}
+
+	const JsonDataPtr& JsonArray::at(size_t Index) const
+	{
+		return JsonArrayParentType::at(Index);
+	}
+
+	JsonArray::operator double() const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+	}
+
+	JsonDataPtr& JsonString::operator [] (const JsonString& Key)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	const JsonDataPtr& JsonString::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	JsonDataPtr& JsonString::operator [] (size_t Index)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	const JsonDataPtr& JsonString::at(size_t Index) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	JsonString::operator double() const
+	{
+		return std::stod(*this);
+	}
+
+	JsonDataPtr& JsonNumber::operator [] (const JsonString& Key)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	const JsonDataPtr& JsonNumber::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	JsonDataPtr& JsonNumber::operator [] (size_t Index)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	const JsonDataPtr& JsonNumber::at(size_t Index) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	JsonNumber::operator double() const
+	{
+		return Value;
+	}
+
+	JsonDataPtr& JsonBoolean::operator [] (const JsonString& Key)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	const JsonDataPtr& JsonBoolean::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	JsonDataPtr& JsonBoolean::operator [] (size_t Index)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	const JsonDataPtr& JsonBoolean::at(size_t Index) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	JsonBoolean::operator double() const
+	{
+		return Value ? 1.0 : 0.0;
+	}
+
+	JsonDataPtr& JsonNull::operator [] (const JsonString& Key)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	const JsonDataPtr& JsonNull::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	JsonDataPtr& JsonNull::operator [] (size_t Index)
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	const JsonDataPtr& JsonNull::at(size_t Index) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+	}
+
+	JsonNull::operator double() const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+	}
+
+	JsonDataPtr ParseJson(const std::string& s)
 	{
 		return JsonData::ParseJson(s);
 	}
 
-	std::unique_ptr<JsonData> ParseJsonFromString(const std::string& s)
+	JsonDataPtr ParseJsonFromString(const std::string& s)
 	{
 		return JsonData::ParseJson(s);
 	}
 
-	std::unique_ptr<JsonData> ParseJsonFromFile(const std::string& FilePath)
+	JsonDataPtr ParseJsonFromFile(const std::string& FilePath)
 	{
 		std::ifstream ifs(FilePath);
 		std::stringstream ss;
@@ -1166,46 +1275,44 @@ namespace JsonLibrary
 		return JsonData::ParseJson(ss.str());
 	}
 
-	std::unique_ptr<JsonData> DuplicateJsonDataUnique(const JsonData& jd)
+	JsonDataPtr Copy(JsonDataPtr Json)
 	{
-		switch (jd.GetType())
-		{
-		case JsonDataType::Object:
-			return std::make_unique<JsonObject>(jd.AsJsonObject());
-		case JsonDataType::Array:
-			return std::make_unique<JsonArray>(jd.AsJsonArray());
-		case JsonDataType::String:
-			return std::make_unique<JsonString>(jd.AsJsonString());
-		case JsonDataType::Number:
-			return std::make_unique<JsonNumber>(jd.AsJsonNumber());
-		case JsonDataType::Boolean:
-			return std::make_unique<JsonBoolean>(jd.AsJsonBoolean());
-		case JsonDataType::Null:
-			return std::make_unique<JsonNull>(jd.GetLineNo(), jd.GetColumn());
-		default:
-			throw WrongDataType(jd.GetLineNo(), jd.GetColumn(), "Unknown JSON data type.");
-		}
+		return Copy(*Json);
 	}
 
-	std::shared_ptr<JsonData> DuplicateJsonDataShared(const JsonData& jd)
+	JsonDataPtr Copy(const JsonData& Json)
 	{
-		switch (jd.GetType())
-		{
-		case JsonDataType::Object:
-			return std::make_shared<JsonObject>(jd.AsJsonObject());
-		case JsonDataType::Array:
-			return std::make_shared<JsonArray>(jd.AsJsonArray());
-		case JsonDataType::String:
-			return std::make_shared<JsonString>(jd.AsJsonString());
-		case JsonDataType::Number:
-			return std::make_shared<JsonNumber>(jd.AsJsonNumber());
-		case JsonDataType::Boolean:
-			return std::make_shared<JsonBoolean>(jd.AsJsonBoolean());
-		case JsonDataType::Null:
-			return std::make_shared<JsonNull>(jd.GetLineNo(), jd.GetColumn());
-		default:
-			throw WrongDataType(jd.GetLineNo(), jd.GetColumn(), "Unknown JSON data type.");
-		}
+		return Json.Copy();
+	}
+
+	JsonDataPtr JsonObject::Copy() const
+	{
+		return MakeJsonObjectPtr(*this);
+	}
+
+	JsonDataPtr JsonArray::Copy() const
+	{
+		return MakeJsonArrayPtr(*this);
+	}
+
+	JsonDataPtr JsonString::Copy() const
+	{
+		return MakeJsonStringPtr(*this);
+	}
+
+	JsonDataPtr JsonNumber::Copy() const
+	{
+		return MakeJsonNumberPtr(*this);
+	}
+
+	JsonDataPtr JsonBoolean::Copy() const
+	{
+		return MakeJsonBooleanPtr(*this);
+	}
+
+	JsonDataPtr JsonNull::Copy() const
+	{
+		return MakeJsonNullPtr(*this);
 	}
 }
 
