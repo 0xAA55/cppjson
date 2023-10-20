@@ -29,7 +29,7 @@ namespace JsonLibrary
 		UnicodeEncodeError(const std::string& what) noexcept;
 	};
 
-	class UnicodeDecodeError : public std::runtime_error
+	class UnicodeDecodeError : public JsonDecodeError
 	{
 	protected:
 		size_t LineNo;

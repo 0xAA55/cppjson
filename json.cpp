@@ -31,7 +31,7 @@ namespace JsonLibrary
 	UnicodeDecodeError::UnicodeDecodeError(size_t FromLineNo, size_t FromColumn, const std::string& what) noexcept :
 		LineNo(FromLineNo),
 		Column(FromColumn),
-		std::runtime_error(what)
+		JsonDecodeError(FromLineNo, FromColumn, what)
 	{
 	}
 
