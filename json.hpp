@@ -131,6 +131,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) = 0;
 		virtual const JsonDataPtr& at(const JsonString& Key) const = 0;
+		virtual bool contains(const JsonString& Key) const = 0;
 		virtual JsonDataPtr& operator [] (size_t Index) = 0;
 		virtual const JsonDataPtr& at(size_t Index) const = 0;
 		virtual operator double() const = 0;
@@ -161,15 +162,25 @@ namespace JsonLibrary
 		bool operator ==(const JsonObject& c) const;
 		bool operator !=(const JsonObject& c) const;
 
-		JsonDataPtr& operator [] (const std::string& Key);
-		const JsonDataPtr& at (const std::string& Key) const;
+		template<typename T> bool contains(T Key) const;
+		template<typename T> const JsonDataPtr& at(T Key) const;
+		template<typename T> JsonDataPtr& operator [] (T Key);
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;
 	};
+
+	extern template JsonDataPtr& JsonObject::operator [] (const std::string& Key);
+	extern template bool JsonObject::contains(const std::string& Key) const;
+	extern template const JsonDataPtr& JsonObject::at(const std::string& Key) const;
+
+	extern template JsonDataPtr& JsonObject::operator [] (const char* Key);
+	extern template bool JsonObject::contains(const char* Key) const;
+	extern template const JsonDataPtr& JsonObject::at(const char* Key) const;
 
 	class JsonArray : public JsonData, public JsonArrayParentType
 	{
@@ -189,6 +200,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;
@@ -209,6 +221,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;
@@ -236,6 +249,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;
@@ -259,6 +273,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;
@@ -278,6 +293,7 @@ namespace JsonLibrary
 
 		virtual JsonDataPtr& operator [] (const JsonString& Key) override;
 		virtual const JsonDataPtr& at(const JsonString& Key) const override;
+		virtual bool contains(const JsonString& Key) const override;
 		virtual JsonDataPtr& operator [] (size_t Index) override;
 		virtual const JsonDataPtr& at(size_t Index) const override;
 		virtual operator double() const override;

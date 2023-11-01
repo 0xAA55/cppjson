@@ -1078,15 +1078,31 @@ namespace JsonLibrary
 		return JsonString(ToString(), LineNo, Column);
 	}
 
-	JsonDataPtr& JsonObject::operator [] (const std::string& key)
+	template<typename T>
+	JsonDataPtr& JsonObject::operator [] (T key)
 	{
 		return JsonObjectParentType::operator[](JsonString(key, 0, 0));
 	}
 
-	const JsonDataPtr& JsonObject::at(const std::string& key) const
+	template<typename T>
+	bool JsonObject::contains(T key) const
+	{
+		return JsonObjectParentType::contains(JsonString(key, 0, 0));
+	}
+
+	template<typename T>
+	const JsonDataPtr& JsonObject::at(T key) const
 	{
 		return JsonObjectParentType::at(JsonString(key, 0, 0));
 	}
+
+	template bool JsonObject::contains(const std::string& Key) const;
+	template const JsonDataPtr& JsonObject::at(const std::string& Key) const;
+	template JsonDataPtr& JsonObject::operator [] (const std::string& Key);
+
+	template bool JsonObject::contains(const char* Key) const;
+	template const JsonDataPtr& JsonObject::at(const char* Key) const;
+	template JsonDataPtr& JsonObject::operator [] (const char* Key);
 
 	JsonDataPtr& JsonObject::operator [] (const JsonString& Key)
 	{
@@ -1096,6 +1112,11 @@ namespace JsonLibrary
 	const JsonDataPtr& JsonObject::at(const JsonString& Key) const
 	{
 		return JsonObjectParentType::at(Key);
+	}
+
+	bool JsonObject::contains(const JsonString& Key) const
+	{
+		return JsonObjectParentType::contains(Key);
 	}
 
 	JsonDataPtr& JsonObject::operator [] (size_t Index)
@@ -1137,6 +1158,11 @@ namespace JsonLibrary
 		return at(size_t(std::stoull(Key)));
 	}
 
+	bool JsonArray::contains(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
 	JsonDataPtr& JsonArray::operator [] (size_t Index)
 	{
 		return JsonArrayParentType::operator[](Index);
@@ -1158,6 +1184,11 @@ namespace JsonLibrary
 	}
 
 	const JsonDataPtr& JsonString::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	bool JsonString::contains(const JsonString& Key) const
 	{
 		throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
@@ -1187,6 +1218,11 @@ namespace JsonLibrary
 		throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
 
+	bool JsonNumber::contains(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
 	JsonDataPtr& JsonNumber::operator [] (size_t Index)
 	{
 		throw WrongDataType(LineNo, Column, "Not a JSON array.");
@@ -1212,6 +1248,11 @@ namespace JsonLibrary
 		throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
 
+	bool JsonBoolean::contains(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
 	JsonDataPtr& JsonBoolean::operator [] (size_t Index)
 	{
 		throw WrongDataType(LineNo, Column, "Not a JSON array.");
@@ -1233,6 +1274,11 @@ namespace JsonLibrary
 	}
 
 	const JsonDataPtr& JsonNull::at(const JsonString& Key) const
+	{
+		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+	}
+
+	bool JsonNull::contains(const JsonString& Key) const
 	{
 		throw WrongDataType(LineNo, Column, "Not a JSON object.");
 	}
