@@ -60,6 +60,27 @@ namespace JsonLibrary
 		return Column;
 	}
 
+	const std::unordered_map<JsonDataType, const char*> JsonDataTypeToStringMap =
+	{
+		{JsonDataType::Unknown, "<unknown>"},
+		{JsonDataType::Object, "object"},
+		{JsonDataType::Array, "array"},
+		{JsonDataType::String, "string"},
+		{JsonDataType::Number, "number"},
+		{JsonDataType::Boolean, "boolean"},
+		{JsonDataType::Null, "null"},
+	};
+
+	std::string JsonDataTypeToString(JsonDataType jd)
+	try
+	{
+		return JsonDataTypeToStringMap.at(jd);
+	}
+	catch (const std::out_of_range&)
+	{
+		return "<corrupted memory>";
+	}
+
 	template<typename NumType, int N>
 	std::string HexN(NumType num)
 	{

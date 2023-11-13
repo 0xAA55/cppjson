@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <cstdint>
+#include <unordered_map>
 
 namespace JsonLibrary
 {
@@ -63,6 +64,9 @@ namespace JsonLibrary
 		Boolean,
 		Null
 	};
+
+	extern const std::unordered_map<JsonDataType, const char*> JsonDataTypeToStringMap;
+	std::string JsonDataTypeToString(JsonDataType jd);
 
 	class JsonData;
 	class JsonObject;
