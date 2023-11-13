@@ -72,7 +72,7 @@ namespace JsonLibrary
 	};
 
 	std::string JsonDataTypeToString(JsonDataType jd)
-	try
+		try
 	{
 		return JsonDataTypeToStringMap.at(jd);
 	}
@@ -129,7 +129,7 @@ namespace JsonLibrary
 
 	public:
 		Utf8Parser() = delete;
-		Utf8Parser(const std::string& s):
+		Utf8Parser(const std::string& s) :
 			s(s),
 			it(s.cbegin()),
 			LineNo(1),
@@ -230,7 +230,7 @@ namespace JsonLibrary
 			return buf;
 		}
 
-		int PeekChar(std::string::const_iterator * next = nullptr)
+		int PeekChar(std::string::const_iterator* next = nullptr)
 		{
 			std::string::const_iterator cur = it;
 			size_t bytes;
@@ -581,7 +581,7 @@ namespace JsonLibrary
 		switch (cur)
 		{
 		case '{':
-			if(1)
+			if (1)
 			{
 				jp.SkipSpacesAndComments();
 				auto ret = MakeJsonObjectPtr(CurLineNo, CurColumn);
@@ -590,7 +590,7 @@ namespace JsonLibrary
 					jp.GetChar();
 					return ret;
 				}
-				for(;;)
+				for (;;)
 				{
 					jp.SkipSpacesAndComments();
 					if (jp.GetChar() != '"') throw JsonDecodeError(jp.GetLineNo(), jp.GetColumn(), "Key name must be string");
@@ -841,7 +841,7 @@ namespace JsonLibrary
 		bool DecimalNonZero = false;
 
 		snprintf(buf, sizeof buf, "%lf", Value);
-		for (; *chr; chr ++)
+		for (; *chr; chr++)
 		{
 			// È¥³ý¼ÓºÅ
 			if (*chr != '+')
@@ -907,61 +907,61 @@ namespace JsonLibrary
 	JsonObject& JsonData::AsJsonObject()
 	{
 		auto p = dynamic_cast<JsonObject*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonArray& JsonData::AsJsonArray()
 	{
 		auto p = dynamic_cast<JsonArray*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonString& JsonData::AsJsonString()
 	{
 		auto p = dynamic_cast<JsonString*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON string.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON string, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonNumber& JsonData::AsJsonNumber()
 	{
 		auto p = dynamic_cast<JsonNumber*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON number.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON number, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonBoolean& JsonData::AsJsonBoolean()
 	{
 		auto p = dynamic_cast<JsonBoolean*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON boolean.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON boolean, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonObject& JsonData::AsJsonObject() const
 	{
 		auto p = dynamic_cast<const JsonObject*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonArray& JsonData::AsJsonArray() const
 	{
 		auto p = dynamic_cast<const JsonArray*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonString& JsonData::AsJsonString() const
 	{
 		auto p = dynamic_cast<const JsonString*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON string.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON string, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonNumber& JsonData::AsJsonNumber() const
 	{
 		auto p = dynamic_cast<const JsonNumber*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON number.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON number, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonBoolean& JsonData::AsJsonBoolean() const
 	{
 		auto p = dynamic_cast<const JsonBoolean*>(this);
-		if (p) return *p; else throw WrongDataType(LineNo, Column, "Not a JSON boolean.");
+		if (p) return *p; else throw WrongDataType(LineNo, Column, std::string("Expected a JSON boolean, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	bool JsonData::IsNull() const
@@ -1004,7 +1004,7 @@ namespace JsonLibrary
 
 	bool JsonData::operator !=(const JsonData& c) const
 	{
-		return ! operator==(c);
+		return !operator==(c);
 	}
 
 	bool JsonObject::operator ==(const JsonObject& c) const
@@ -1156,7 +1156,7 @@ namespace JsonLibrary
 
 	JsonObject::operator double() const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON number, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonArray::operator [] (const JsonString& Key)
@@ -1181,7 +1181,7 @@ namespace JsonLibrary
 
 	bool JsonArray::contains(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonArray::operator [] (size_t Index)
@@ -1196,32 +1196,32 @@ namespace JsonLibrary
 
 	JsonArray::operator double() const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON number, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonString::operator [] (const JsonString& Key)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonString::at(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	bool JsonString::contains(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonString::operator [] (size_t Index)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonString::at(size_t Index) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonString::operator double() const
@@ -1231,27 +1231,27 @@ namespace JsonLibrary
 
 	JsonDataPtr& JsonNumber::operator [] (const JsonString& Key)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonNumber::at(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	bool JsonNumber::contains(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonNumber::operator [] (size_t Index)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonNumber::at(size_t Index) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonNumber::operator double() const
@@ -1261,27 +1261,27 @@ namespace JsonLibrary
 
 	JsonDataPtr& JsonBoolean::operator [] (const JsonString& Key)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonBoolean::at(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	bool JsonBoolean::contains(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonBoolean::operator [] (size_t Index)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonBoolean::at(size_t Index) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonBoolean::operator double() const
@@ -1291,32 +1291,32 @@ namespace JsonLibrary
 
 	JsonDataPtr& JsonNull::operator [] (const JsonString& Key)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonNull::at(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	bool JsonNull::contains(const JsonString& Key) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON object.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON object, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr& JsonNull::operator [] (size_t Index)
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	const JsonDataPtr& JsonNull::at(size_t Index) const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON array.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON array, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonNull::operator double() const
 	{
-		throw WrongDataType(LineNo, Column, "Not a JSON number.");
+		throw WrongDataType(LineNo, Column, std::string("Expected a JSON number, got a JSON " + JsonDataTypeToString(Type)));
 	}
 
 	JsonDataPtr ParseJson(const std::string& s)
